@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e1714">
+<title>Table de cartes</title>
+<style>
+:root{--night:#0e1714;--panel:#17231e;--line:#2a3c34;--tx:#efeadb;--mu:#98a69d;--brass:#d9a441;--felt1:#26774d;--felt2:#14503a;--wood:#6b4a2b;--ivory:#fbf8ef;--red:#b3261e;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--night);color:var(--tx);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:max(10px,env(safe-area-inset-top)) 10px max(10px,env(safe-area-inset-bottom));max-width:560px;margin:0 auto;min-height:100vh}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--brass);outline-offset:2px}
+.btn{background:var(--brass);color:#1d1503;border:0;border-radius:10px;padding:11px 16px;font-weight:700}
+.btn.alt{background:transparent;color:var(--tx);border:1px solid var(--line)}
+.btn.sm{padding:8px 12px;font-size:14px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input[type=text],input[type=number]{background:var(--night);border:1px solid var(--line);border-radius:10px;padding:11px;min-width:0;flex:1}
+input[type=number]{flex:0 0 64px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
+h1{font:700 26px/1.15 Georgia,"Times New Roman",serif;margin:18px 0 6px}
+p.lead{color:var(--mu);margin:0 0 16px}
+[hidden]{display:none!important}
+#conn{background:#5a2a14;color:#ffd9c2;text-align:center;border-radius:10px;padding:6px;font-size:14px;margin-bottom:8px}
+#top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
+#top b{font:700 15px Georgia,serif;letter-spacing:.04em}
+#stage{position:relative;width:100%;aspect-ratio:1/1.1;max-height:470px}
+#felt{position:absolute;inset:6% 2%;border-radius:50%;background:radial-gradient(ellipse at center,var(--felt1) 0%,#1b6140 65%,var(--felt2) 100%);border:7px solid var(--wood);box-shadow:inset 0 0 34px #0007,0 8px 22px #0006}
+#center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:58%;display:flex;flex-direction:column;align-items:center;gap:10px}
+#pile{display:flex;flex-wrap:wrap;justify-content:center;min-height:62px;padding-left:20px}
+#pile .card{margin-left:-20px}
+#pile .empty{color:#ffffffb0;padding-left:0}
+.seat{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px;width:34%}
+.nm{background:#000b;color:#fff;border-radius:99px;padding:1px 9px;font-size:12px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm.off{opacity:.55}
+.fan{display:flex;justify-content:center;padding-left:14px;min-height:38px}
+.fan .card{margin-left:-14px}
+.card{width:46px;height:66px;border-radius:7px;border:1px solid #b9b4a4;background:var(--ivory);color:#1b1b19;display:flex;flex-direction:column;align-items:center;justify-content:center;font:700 17px/1.05 Georgia,"Times New Roman",serif;padding:0;flex:0 0 auto;box-shadow:0 1px 3px #0006;position:relative}
+.card i{font-style:normal;font-size:19px}
+.card.red{color:var(--red)}
+.card.back{background:repeating-linear-gradient(45deg,#2c4a7c,#2c4a7c 5px,#486ba3 5px,#486ba3 10px);border:2px solid #fff}
+.card.mini{width:26px;height:38px;border-radius:5px;border-width:1px}
+.card.hid::after{content:"🙈";position:absolute;top:-7px;right:-6px;font-size:13px}
+.card.sel{transform:translateY(-12px);box-shadow:0 0 0 3px var(--brass),0 5px 12px #0008;z-index:3}
+#deck{box-shadow:2px 2px 0 #fff8,4px 4px 0 #0003,0 2px 6px #0007}
+.badge{position:absolute;bottom:-9px;right:-9px;background:#000d;color:#fff;border-radius:99px;font:600 11px system-ui;padding:1px 6px}
+#bar{display:flex;gap:8px;justify-content:center;min-height:40px;margin:2px 0}
+#meLabel{text-align:center;font-size:13px;color:var(--mu)}
+#hand{display:flex;overflow-x:auto;padding:16px 18px 8px;min-height:104px;justify-content:safe center}
+#hand .card{width:56px;height:80px;font-size:21px;margin-left:-16px;transition:transform .12s}
+#hand .card:first-child{margin-left:0}
+#hand .card i{font-size:23px}
+.hint{color:var(--mu);font-size:12px;text-align:center;margin:2px 0 10px}
+.empty{color:var(--mu);font-size:13px;align-self:center}
+details{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:11px 14px;margin-bottom:10px}
+summary{font-weight:600;cursor:pointer}
+label.chk{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--mu)}
+#err{color:#ffb4a8;font-size:14px;margin-top:8px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div id="home" hidden>
+  <h1>Une table de cartes dans ta poche</h1>
+  <p class="lead">Crée une table, envoie le lien à tes amis : tout le monde joue avec le même jeu, sur son téléphone. Pas de compte, pas de règles imposées.</p>
+  <div class="panel">
+    <button class="btn" id="create">Créer une table</button>
+    <div class="row" style="margin-top:12px"><input type="text" id="code" placeholder="Code d’une table" maxlength="8" autocapitalize="characters"><button class="btn alt" id="goCode">Rejoindre</button></div>
+  </div>
+</div>
+
+<div id="ask" hidden>
+  <h1>Table <span id="askCode"></span></h1>
+  <p class="lead">Comment t’appelle-t-on autour de la table ?</p>
+  <div class="panel row"><input type="text" id="name" placeholder="Ton prénom" maxlength="14" autocomplete="given-name"><button class="btn" id="sit">S’asseoir</button></div>
+</div>
+
+<div id="game" hidden>
+  <div id="conn" hidden>Connexion perdue, reconnexion…</div>
+  <div id="top"><b>TABLE <span id="roomCode"></span></b><button class="btn alt sm" id="invite">Inviter</button></div>
+  <div id="stage">
+    <div id="felt"></div>
+    <div id="center"><button class="card back" id="deck" data-a="draw" aria-label="Piocher une carte"></button><div id="pile"></div></div>
+    <div id="seats"></div>
+  </div>
+  <div id="bar"></div>
+  <div id="meLabel"></div>
+  <div id="hand"></div>
+  <p class="hint">Touche la pioche pour piocher. Touche une carte pour la sélectionner.</p>
+  <details>
+    <summary>Actions de la partie</summary>
+    <div class="row" style="margin:12px 0 8px"><input type="number" id="n" min="1" max="20" value="5" aria-label="Nombre de cartes"><button class="btn" data-a="deal">Distribuer à tous</button></div>
+    <div class="row">
+      <button class="btn alt sm" data-a="gather">Ramasser la table</button>
+      <button class="btn alt sm" data-a="shuffle">Mélanger la pioche</button>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <label class="chk"><input type="checkbox" id="jok" checked> Avec les 2 jokers</label>
+      <button class="btn alt sm" data-a="reset">Nouvelle partie</button>
+    </div>
+    <div class="row" style="margin-top:12px"><button class="btn alt sm" id="leave">Quitter la table</button></div>
+  </details>
+  <div id="err" hidden></div>
+</div>
+
+<script>
+const SUITS=['♠','♥','♦','♣'],RANKS=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const $=id=>document.getElementById(id);
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const mem={};
+const store={get(k){try{return localStorage.getItem(k)||mem[k]||null}catch(e){return mem[k]||null}},set(k,v){mem[k]=v;try{localStorage.setItem(k,v)}catch(e){}},del(k){delete mem[k];try{localStorage.removeItem(k)}catch(e){}}};
+let token=store.get('ct_token');
+if(!token){token=(crypto.randomUUID?crypto.randomUUID().replace(/-/g,''):Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2)+Date.now().toString(36)).padEnd(24,'x');store.set('ct_token',token)}
+let room=(new URLSearchParams(location.search).get('room')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,8);
+let name=store.get('ct_name')||'',ws=null,retry=0,S=null,sel=null,leaving=false;
+
+function show(id){['home','ask','game'].forEach(x=>$(x).hidden=x!==id)}
+function setRoom(c){room=c;history.replaceState(null,'','?room='+c);route()}
+function route(){
+  if(!room){show('home');return}
+  if(!name){$('askCode').textContent=room;show('ask');return}
+  $('roomCode').textContent=room;show('game');connect();
+}
+$('create').onclick=()=>{const L='ABCDEFGHJKLMNPQRSTUVWXYZ';let c='';for(let i=0;i<4;i++)c+=L[Math.floor(Math.random()*L.length)];setRoom(c)};
+$('goCode').onclick=()=>{const c=$('code').value.toUpperCase().replace(/[^A-Z0-9]/g,'');if(c)setRoom(c)};
+$('sit').onclick=()=>{const n=$('name').value.trim();if(!n)return;name=n;store.set('ct_name',n);route()};
+$('name').addEventListener('keydown',e=>{if(e.key==='Enter')$('sit').click()});
+$('invite').onclick=async()=>{
+  const url=location.origin+'/?room='+room;
+  try{if(navigator.share){await navigator.share({title:'Table de cartes',text:'Rejoins ma table de cartes',url});return}}catch(e){return}
+  try{await navigator.clipboard.writeText(url);$('invite').textContent='Lien copié';setTimeout(()=>$('invite').textContent='Inviter',2000)}catch(e){prompt('Copie ce lien :',url)}
+};
+$('leave').onclick=()=>{if(!confirm('Quitter la table ? Tes cartes retournent dans la pioche.'))return;leaving=true;send({t:'leave'});try{ws&&ws.close()}catch(e){}room='';S=null;history.replaceState(null,'','/');route()};
+
+function send(o){if(ws&&ws.readyState===1)ws.send(JSON.stringify(o))}
+function connect(){
+  if(ws&&(ws.readyState===0||ws.readyState===1))return;
+  leaving=false;
+  ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host);
+  ws.onopen=()=>{retry=0;$('conn').hidden=true;send({t:'join',room,token,name})};
+  ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch(x){return}
+    if(m.t==='state'){S=m;$('err').hidden=true;render()}
+    else if(m.t==='err'){$('err').textContent=m.msg;$('err').hidden=false}};
+  ws.onclose=()=>{if(leaving||!room)return;$('conn').hidden=false;setTimeout(connect,Math.min(800*Math.pow(2,retry++),8000))};
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&room&&name&&(!ws||ws.readyState>1))connect()});
+
+function face(c,extra,a,d){
+  const at=a?` data-a="${a}" ${d}`:'';
+  if(c>=52)return `<button class="card${extra||''}"${at}><b>Jok</b><i>🃏</i></button>`;
+  const s=Math.floor(c/13),red=s===1||s===2;
+  return `<button class="card${red?' red':''}${extra||''}"${at}><b>${RANKS[c%13]}</b><i>${SUITS[s]}</i></button>`}
+
+function render(){
+  if(!S)return;
+  $('deck').innerHTML=`<span class="badge">${S.deck}</span>`;
+  const mine=S.hand.slice().sort((a,b)=>a-b);
+  if(sel&&sel.k==='h'&&!mine.includes(sel.v))sel=null;
+  if(sel&&sel.k==='p'&&!S.pile[sel.v])sel=null;
+  $('pile').innerHTML=S.pile.length?S.pile.map(x=>{
+    const on=sel&&sel.k==='p'&&sel.v===x.i?' sel':'';
+    if(x.c===null)return `<button class="card back${on}" data-a="selp" data-i="${x.i}" aria-label="Carte face cachée"></button>`;
+    return face(x.c,(x.up?'':' hid')+on,'selp',`data-i="${x.i}"`)}).join(''):'<span class="empty">Table vide</span>';
+  const others=S.players.filter(p=>p.id!==S.me),m=others.length;
+  $('seats').innerHTML=others.map((p,k)=>{
+    const t=(k+1)/(m+1),x=50+41*Math.cos(Math.PI+Math.PI*t),y=50-40*Math.sin(Math.PI*t)+4;
+    return `<div class="seat" style="left:${x}%;top:${y}%"><div class="fan">${'<span class="card back mini"></span>'.repeat(Math.min(p.n,12))}</div><span class="nm${p.on?'':' off'}">${esc(p.name)} · ${p.n}${p.on?'':' (absent)'}</span></div>`}).join('');
+  $('hand').innerHTML=mine.length?mine.map(c=>face(c,sel&&sel.k==='h'&&sel.v===c?' sel':'','selh',`data-c="${c}"`)).join(''):'<span class="empty">Ta main est vide</span>';
+  $('meLabel').textContent=`${name} (moi) · ${mine.length} carte${mine.length>1?'s':''}`;
+  $('jok').checked=S.jokers;
+  let bar='';
+  if(sel&&sel.k==='h')bar=`<button class="btn" data-a="play" data-up="1">Poser</button><button class="btn alt" data-a="play" data-up="0">Poser face cachée</button><button class="btn alt" data-a="cancel">Annuler</button>`;
+  if(sel&&sel.k==='p'){const x=S.pile[sel.v];bar=`<button class="btn" data-a="take">Reprendre</button>${x.up?'':'<button class="btn alt" data-a="flip">Retourner</button>'}<button class="btn alt" data-a="cancel">Annuler</button>`}
+  $('bar').innerHTML=bar;
+}
+
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-a]');if(!b)return;
+  const a=b.dataset.a;
+  if(a==='selh'){const c=+b.dataset.c;sel=sel&&sel.k==='h'&&sel.v===c?null:{k:'h',v:c};render();return}
+  if(a==='selp'){const i=+b.dataset.i;sel=sel&&sel.k==='p'&&sel.v===i?null:{k:'p',v:i};render();return}
+  if(a==='cancel'){sel=null;render();return}
+  if(a==='play'&&sel&&sel.k==='h'){send({t:'play',c:sel.v,up:b.dataset.up==='1'});sel=null;return}
+  if(a==='take'&&sel&&sel.k==='p'){send({t:'take',i:sel.v});sel=null;return}
+  if(a==='flip'&&sel&&sel.k==='p'){send({t:'flip',i:sel.v});sel=null;return}
+  if(a==='deal'){send({t:'deal',n:parseInt($('n').value)||1});return}
+  if(a==='reset'){if(confirm('Remettre toutes les cartes dans la pioche et mélanger ?'))send({t:'reset',jokers:$('jok').checked});return}
+  if(['draw','gather','shuffle'].includes(a))send({t:a});
+});
+route();
+</script>
+</body>
+</html>
