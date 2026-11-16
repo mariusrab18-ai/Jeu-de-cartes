@@ -1,0 +1,9 @@
+{
+  "name": "cartes-train",
+  "version": "1.0.0",
+  "description": "Table de cartes virtuelle partagée, sans compte, jouable à plusieurs depuis un simple lien",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" },
+  "dependencies": { "ws": "^8.18.0" }
+}
